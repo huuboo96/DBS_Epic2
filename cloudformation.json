@@ -1,0 +1,114 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Metadata": {
+        "AWS::CloudFormation::Designer": {
+            "a9f6c603-4bd6-4b32-9394-0bbbe4fffc19": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 222,
+                    "y": 178
+                },
+                "z": 0,
+                "embeds": []
+            },
+            "d7b68d75-2cf0-44e8-acbc-1ddeeff96c3c": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 209,
+                    "y": 58
+                },
+                "z": 0,
+                "embeds": []
+            },
+            "823690df-ea4f-4f55-a746-2d5c8b9637a2": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 184,
+                    "y": 250
+                },
+                "z": 0,
+                "embeds": []
+            },
+            "f122460b-1832-448c-a618-b880653002ad": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 120,
+                    "y": -420
+                },
+                "z": 0,
+                "embeds": []
+            },
+            "ab91ed83-d522-4d28-840c-62c9522eb1f7": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 312,
+                    "y": 125
+                },
+                "z": 0,
+                "embeds": []
+            }
+        }
+    },
+    "Resources": {
+        "EC2I1913K": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {},
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "a9f6c603-4bd6-4b32-9394-0bbbe4fffc19"
+                }
+            }
+        },
+        "EC2KP3DIRQ": {
+            "Type": "AWS::EC2::KeyPair",
+            "Properties": {},
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "d7b68d75-2cf0-44e8-acbc-1ddeeff96c3c"
+                }
+            }
+        },
+        "IAMR3G9QL": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {},
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "823690df-ea4f-4f55-a746-2d5c8b9637a2"
+                }
+            }
+        },
+        "IAMAK2HEH7": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {},
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "f122460b-1832-448c-a618-b880653002ad"
+                }
+            }
+        },
+        "LF3PJSF": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {},
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "ab91ed83-d522-4d28-840c-62c9522eb1f7"
+                }
+            }
+        }
+    }
+}
