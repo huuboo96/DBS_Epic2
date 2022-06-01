@@ -1,7 +1,7 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
 
-    "Description": "AWS EC2 Instance",
+    "Description": "AWS Cloud Formation Template: Resources - AWS EC2 Instance with Amazon Linux AMI, AWS Security Group, Amazon S3 Bucket",
 
     "Parameters": {
 
@@ -16,7 +16,7 @@
         "TagValue": {
             "Description": "The EC2 tag value that identifies this as a target for deployments.",
             "Type": "String",
-            "Default": "CodeDeployDemo",
+            "Default": "EC2WebServer",
             "AllowedPattern": "[\\x20-\\x7E]*",
             "ConstraintDescription": "Can contain only ASCII characters."
         },
@@ -63,8 +63,8 @@
 
         "RegionOS2AMI": {
             "eu-central-1": {
-                "Linux": "ami-a6aeaebb",
-                "Windows": "ami-3e737323"
+                "HVM64" : "ami-0474863011a7d1541", 
+                "HVMG2" : "ami-0aa1822e3eb913a11"
             }
         },
 
@@ -96,15 +96,12 @@
             },
 
             "Properties": {
-                "ImageId": {
-                    "Fn::FindInMap": [
-                        "RegionOS2AMI",
+                "ImageId" : {
+                     "Fn::FindInMap" : [ "RegionOS2AMI", 
                         {
-                            "Ref": "AWS::Region"
+                             "Ref" : "AWS::Region" 
                         },
-                        {
-                            "Ref": "OperatingSystem"
-                        }
+                      "HVM64"
                     ]
                 },
 
@@ -238,15 +235,10 @@
             }
         },
 
-
-
-
-
         "S3Bucket": {
             "Type": "AWS::S3::Bucket",
             "Properties": {}
         },
-
 
         "VPC": {
             "Type": "AWS::EC2::VPC",
