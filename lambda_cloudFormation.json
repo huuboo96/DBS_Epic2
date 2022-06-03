@@ -24,6 +24,7 @@
         "KeyPairName": {
             "Description": "Name of an existing Amazon EC2 key pair to enable SSH or RDP access to the instances.",
             "Type": "String",
+            "Default": "Azkaban",
             "MinLength": "1",
             "MaxLength": "255",
             "AllowedPattern": "[\\x20-\\x7E]*",
@@ -56,6 +57,14 @@
             "Default": "0.0.0.0/0",
             "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
             "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+        },
+
+
+        "AvailabilityZone": {
+            "Description": "An Availability Zone.",
+            "Type": "String",
+            "Default": "eu-central-1c",
+            "ConstraintDescription": "Must be a valid Availability Zone"
         }
     },
 
@@ -135,7 +144,7 @@
                 }
             }
         },
-     
+      
         "SecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
@@ -236,9 +245,17 @@
 
         "S3Bucket": {
             "Type": "AWS::S3::Bucket",
-            "Properties": {}
+            "Properties": {
+                "AccessControl": "PublicRead",
+                "WebsiteConfiguration": {
+                    "IndexDocument": "index.html",
+                    "ErrorDocument": "error.html"
+                },
+                "BucketName": "s3-bucket-ec2-hk"
+            }
         },
 
+        
         "VPC": {
             "Type": "AWS::EC2::VPC",
             "Properties": {
@@ -246,6 +263,48 @@
                 "EnableDnsSupport": "true",
                 "EnableDnsHostnames": "true"
             }
-        }       
+        },
+        
+        "LambdaFunctionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+               "AssumeRolePolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                     {
+                        "Effect": "Allow",
+                        "Principal": {
+                           "Service": [
+                              "lambda.amazonaws.com"
+                           ]
+                        },
+                        "Action": [
+                           "sts:AssumeRole"
+                        ]
+                     }
+                  ]
+               },
+               "Path": "/",
+               "Policies": [
+                  {
+                     "PolicyName": "LambdaFunctionPolicy",
+                     "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                           {
+                              "Effect": "Allow",
+                              "Action": [
+                                 "logs:CreateLogGroup",
+                                 "logs:CreateLogStream",
+                                 "logs:PutLogEvents"
+                              ],
+                              "Resource": "*"
+                           }
+                        ]
+                     }
+                  }
+               ]
+            }
+         }
     }
 }
