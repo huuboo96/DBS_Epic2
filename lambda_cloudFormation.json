@@ -254,8 +254,7 @@
                 "BucketName": "s3-bucket-ec2-hk"
             }
         },
-
-        
+    
         "VPC": {
             "Type": "AWS::EC2::VPC",
             "Properties": {

@@ -1,7 +1,7 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
 
-    "Description": "AWS Cloud Formation Template: Resources - AWS EC2 Instance with Amazon Linux AMI, AWS Security Group, Amazon S3 Bucket",
+    "Description": "AWS Cloud Formation Template: Resources - AWS EC2 Instance with Amazon Linux AMI, AWS Security Group, Amazon S3 Bucket.",
 
     "Parameters": {
 
