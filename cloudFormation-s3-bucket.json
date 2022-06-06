@@ -1,0 +1,414 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+
+    "Description": "AWS Cloud Formation Template: Resources - AWS EC2 Instance with Amazon Linux AMI, AWS Security Group, Amazon S3 Bucket",
+
+    "Parameters": {
+
+        "TagKey": {
+            "Description": "The EC2 tag key that identifies this as a target for deployments.",
+            "Type": "String",
+            "Default": "Name",
+            "AllowedPattern": "[\\x20-\\x7E]*",
+            "ConstraintDescription": "Can contain only ASCII characters."
+        },
+
+        "TagValue": {
+            "Description": "The EC2 tag value that identifies this as a target for deployments.",
+            "Type": "String",
+            "Default": "EC2WebServer",
+            "AllowedPattern": "[\\x20-\\x7E]*",
+            "ConstraintDescription": "Can contain only ASCII characters."
+        },
+
+        "KeyPairName": {
+            "Description": "Name of an existing Amazon EC2 key pair to enable SSH or RDP access to the instances.",
+            "Type": "String",
+            "MinLength": "1",
+            "MaxLength": "255",
+            "AllowedPattern": "[\\x20-\\x7E]*",
+            "ConstraintDescription": "KeyPairName is a required Field and can contain only ASCII characters."
+        },
+
+        "InstanceType": {
+            "Description": "Amazon EC2 instance type.",
+            "Type": "String",
+            "Default": "t2.micro",
+            "ConstraintDescription": "Must be a valid Amazon EC2 instance type."
+        },
+        
+        "OperatingSystem": {
+            "Description": "Amazon EC2 operating system type (Linux or Windows).",
+            "Type": "String",
+            "Default": "Linux",
+            "ConstraintDescription": "Must be Windows or Linux.",
+            "AllowedValues": [
+                "Linux",
+                "Windows"
+            ]
+        },
+
+        "SSHLocation": {
+            "Description": "The IP address range that can be used to connect using SSH or RDP to the Amazon EC2 instances.",
+            "Type": "String",
+            "MinLength": "9",
+            "MaxLength": "18",
+            "Default": "0.0.0.0/0",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+        }
+    },
+
+    "Mappings": {
+
+        "RegionOS2AMI": {
+            "eu-central-1": {
+                "HVM64" : "ami-0474863011a7d1541", 
+                "HVMG2" : "ami-0aa1822e3eb913a11"
+            }
+        },
+
+        "OS2SSHPort": {
+            "Linux": {
+                "SSHPort": "22"
+            },
+            "Windows": {
+                "SSHPort": "3389"
+            }
+        }
+    },
+
+    "Resources": {
+
+        "S3Bucket1": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {}
+        },
+
+        "LinuxEC2Instance": {
+            "Type": "AWS::EC2::Instance",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "services": {
+                        "sysvint": {
+                            "codedeploy-agent": {
+                                "enabled": "true",
+                                "ensureRunning": "true"
+                            }
+                        }
+                    }
+                }                
+            },
+
+            "Properties": {
+                "ImageId" : {
+                     "Fn::FindInMap" : [ "RegionOS2AMI", 
+                        {
+                             "Ref" : "AWS::Region" 
+                        },
+                      "HVM64"
+                    ]
+                },
+
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+
+                "SecurityGroups": [
+                    {
+                        "Ref": "SecurityGroup"
+                    }
+                ],
+
+                "KeyName": {
+                    "Ref": "KeyPairName"
+                },
+
+                "Tags": [
+                    {
+                        "Key": {
+                            "Ref": "TagKey"
+                        },
+                        "Value": {
+                            "Ref": "TagValue"
+                        }
+                    }
+                ],
+
+                "IamInstanceProfile": {
+                    "Ref": "InstanceRoleInstanceProfile"
+                }
+            }
+        },
+        
+        "SecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable HTTP access via port 80 and SSH access.",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": {
+                            "Fn::FindInMap": [
+                                "OS2SSHPort",
+                                {
+                                    "Ref": "OperatingSystem"
+                                },
+                                "SSHPort"
+                            ]
+                        },
+                        "ToPort": {
+                            "Fn::FindInMap": [
+                                "OS2SSHPort",
+                                {
+                                    "Ref": "OperatingSystem"
+                                },
+                                "SSHPort"
+                            ]
+                        },
+                        "CidrIp": {
+                            "Ref": "SSHLocation"
+                        }
+                    }
+                ]
+            }            
+        },
+
+        "InstanceRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/"
+            }
+        },
+        
+        "InstanceRolePolicies": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "InstanceRole",
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "cloudformation:Describe*",
+                                "cloudformation:GetTemplate",
+                                "s3:Get*"
+                            ],
+                            "Resource": "*"
+                        }
+                    ]
+                },
+                "Roles": [
+                    {
+                        "Ref": "InstanceRole"
+                    }
+                ]
+            }           
+        },
+        
+        "InstanceRoleInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "InstanceRole"
+                    }
+                ]
+            }
+        },
+
+        
+
+        "S3Bucket2": {
+            "Type": "AWS::S3::Bucket",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+
+                "ReplicationConfiguration": {
+                    "Role": {
+                        "Fn::GetAtt": [
+                            "WorkItemBucketBackupRole",
+                            "Arn"
+                        ]
+                    },
+                    "Rules": [
+                        {
+                            "Destination": {
+                                "Bucket": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "arn:aws:s3:::",
+                                            {
+                                                "Fn::Join": [
+                                                    "-",
+                                                    [
+                                                        {
+                                                            "Ref": "AWS::Region"
+                                                        },
+                                                        {
+                                                            "Ref": "AWS::StackName"
+                                                        },
+                                                        "replicationbucket"
+                                                    ]
+                                                ]
+                                            }
+                                        ]
+                                    ]
+                                },
+                                "StorageClass": "STANDARD"
+                            },
+                            "Id": "Backup",
+                            "Prefix": "",
+                            "Status": "Enabled"
+                        }
+                    ]
+                },
+                "VersioningConfiguration": {
+                    "Status": "Enabled"
+                }
+            }
+        },
+
+        "WorkItemBucketBackupRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "s3.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+
+        "BucketBackupPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "s3:GetReplicationConfiguration",
+                                "s3:ListBucket"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": [
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "arn:aws:s3:::",
+                                            {
+                                                "Ref": "S3Bucket1"
+                                            }
+                                        ]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Action": [
+                                "s3:GetObjectVersion",
+                                "s3:GetObjectVersionAcl"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": [
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "arn:aws:s3:::",
+                                            {
+                                                "Ref": "S3Bucket1"
+                                            },
+                                            "/*"
+                                        ]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Action": [
+                                "s3:ReplicateObject",
+                                "s3:ReplicateDelete"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": [
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "arn:aws:s3:::",
+                                            {
+                                                "Fn::Join": [
+                                                    "-",
+                                                    [
+                                                        {
+                                                            "Ref": "AWS::Region"
+                                                        },
+                                                        {
+                                                            "Ref": "AWS::StackName"
+                                                        },
+                                                        "replicationbucket"
+                                                    ]
+                                                ]
+                                            },
+                                            "/*"
+                                        ]
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "PolicyName": "BucketBackupPolicy",
+                "Roles": [
+                    {
+                        "Ref": "WorkItemBucketBackupRole"
+                    }
+                ]
+            }
+        },
+
+        "VPC": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": "10.0.0.0/16",
+                "EnableDnsSupport": "true",
+                "EnableDnsHostnames": "true"
+            }
+        }       
+    }
+}
