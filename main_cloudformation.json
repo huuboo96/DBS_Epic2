@@ -251,7 +251,7 @@
                     "IndexDocument": "index.html",
                     "ErrorDocument": "error.html"
                 },
-                "BucketName": "s3-bucket-ec2-hk"
+                "BucketName": "s3-bucket-ec2-hk-test"
             }
         },
 
