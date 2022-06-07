@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: >
+    AWS Cloud Formation Network Template: 
+    Resources:
+    - AWS VPC, 
+    - AWS GateWay, 
+    - AWS GateWayAttachment,
+    - AWS RouteTable,
+    - AWS SubnetRT
+
+Parameters:
+
+  Region:
+    Description: An Availability Zone.
+    Type: String
+    Default: eu-central-1
+    ConstraintDescription: Must be a valid Availability Zone
+
+Resources:
+
+  VPCAutomation:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.0.0.0/22"
+      Tags:
+        - Key: "Name"
+          Value: "VPCAutomation"
+
+  GateWay:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "MyGateWay"
+
+  GateWayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref GateWay
+      VpcId: !Ref VPCAutomation
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "RouteTable"
+      VpcId: !Ref VPCAutomation
+
+  Route:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref GateWay
+      RouteTableId: !Ref RouteTable
+
+  SubnetRT:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref PublicSubnet
+
+
+# =============== Subnet ===============
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub '${Region}a'
+      CidrBlock: 10.0.0.0/24
+      Tags:
+        - Key: 'Name'
+          Value: 'PublicSubnet'
+      VpcId: !Ref VPCAutomation
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub '${Region}a'
+      CidrBlock: 10.0.1.0/24
+      Tags:
+        - Key: 'Name'
+          Value: 'PrivateSubnet'
+      VpcId: !Ref VPCAutomation
+
+  PrivateSubnetRT:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "PrivateSubnetRT"
+      VpcId: !Ref VPCAutomation
+
+  PrivateRTAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateSubnetRT
+      SubnetId: !Ref PrivateSubnet
+
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "EIP"
+
+  NAT:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIP.AllocationId
+      SubnetId: !Ref PublicSubnet
+      Tags:
+        - Key: "Name"
+          Value: "NAT"
+
+  PrivateSubnetARoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NAT
+      RouteTableId: !Ref PrivateSubnetRT
+
+# =============== END Subnet ===============
+
+Outputs:
+  VpcId:
+    Value: !Ref VPCAutomation
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-VpcId"
+  PrivateSubnet:
+    Value:
+      Ref: PrivateSubnet
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PrivateSubnet"
+  PublicSubnet:
+    Value:
+      Ref: PublicSubnet
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PublicSubnet"
