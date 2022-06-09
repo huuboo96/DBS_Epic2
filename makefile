@@ -10,9 +10,11 @@ version := $(shell cat version)
 
 
 environment:
+	brew install python@3.9
 	brew install awscli
 	brew install awscurl
 	pip3 install boto3
+	pip3 install jinja2
 
 
 create_bucket:	environment
