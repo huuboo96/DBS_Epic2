@@ -6,9 +6,7 @@ TEMPLATE="cloudformation_template.yaml"
 CAPABILITIES=CAPABILITY_NAMED_IAM
 URL="s3://$(BUCKET)/$(TEMPLATE)"
 
-TEST=cat "url_template.txt"
-
-
+version := $(shell cat version)
 
 
 environment:
@@ -20,26 +18,18 @@ environment:
 create_bucket:	environment
 	aws s3 mb s3://$(BUCKET) --region $(REGION) || true
 
-package: create_bucket
-	alias pip=pip3
-	pip install --target ./lambda_function -r ./lambda_function/requirements.txt
-	aws cloudformation package \
-		--template ./external-stack.yaml \
-		--s3-bucket $(BUCKET) \
-		--output-template-file packaged-stack.yaml
-
-
 check_bucket:
 	aws s3 ls s3://$(BUCKET)
 
-upload_template: create_bucket
+upload_template: create_bucket check_bucket
 	aws s3 cp $(TEMPLATE) $(URL) --region=$(REGION) --output=yaml
 
 presign: upload_template
 	aws s3 presign $(URL) --expires-in 3600 > "url_template.txt"
 
 template_url: 
-	cat "url_template.txt"
+	$(var) = cat "url_template.txt"
+	$(var)
 
 deploy_stack: presign
 
@@ -56,10 +46,11 @@ test:
 
 all: deploy_stack
 
+get_stacks:  
+	aws cloudformation describe-stacks --stack-name $(STACK)
+
+
 cleanup: 
 	aws cloudformation delete-stack --stack-name $(STACK)
 	aws s3 rm s3://$(BUCKET) --region $(REGION) --recursive
 	aws s3 rb s3://$(BUCKET) --region $(REGION)
-
-
-
