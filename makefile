@@ -6,13 +6,15 @@ TEMPLATE="cloudformation_template.yaml"
 CAPABILITIES=CAPABILITY_NAMED_IAM
 URL="s3://$(BUCKET)/$(TEMPLATE)"
 
+TEST=cat "url_template.txt"
+
+
+
 
 environment:
 	brew install awscli
 	brew install awscurl
-	alias python=python3
-	alias pip=pip3
-	pip install boto3
+	pip3 install boto3
 
 
 create_bucket:	environment
@@ -30,21 +32,34 @@ package: create_bucket
 check_bucket:
 	aws s3 ls s3://$(BUCKET)
 
-upload_template:
+upload_template: create_bucket
 	aws s3 cp $(TEMPLATE) $(URL) --region=$(REGION) --output=yaml
 
 presign: upload_template
 	aws s3 presign $(URL) --expires-in 3600 > "url_template.txt"
 
+template_url: 
+	cat "url_template.txt"
+
 deploy_stack: presign
-	
+
 	aws cloudformation create-stack \
 		--stack-name $(STACK) \
-		--template-url $(TEMPLATE_URL)\
+		--template-url "https://hkozu-s3-bucket.s3.eu-central-1.amazonaws.com/cloudformation_template.yaml?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAZDR6NLHIC6QHYPGS%2F20220609%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20220609T170721Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=d5973bbc1a15e0c4923fce0a3e6beb9f6566760c79ebe98c8a64a65d6bcd4f26"\
 		--capabilities $(CAPABILITIES)
+
+
+test: 
+	echo $(TEST)
+
+
+
+all: deploy_stack
 
 cleanup: 
 	aws cloudformation delete-stack --stack-name $(STACK)
 	aws s3 rm s3://$(BUCKET) --region $(REGION) --recursive
+	aws s3 rb s3://$(BUCKET) --region $(REGION)
 
-all: deploy_stack
+
+

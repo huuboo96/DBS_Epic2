@@ -28,3 +28,6 @@ def lambda_handler2(event, context):
         'statusCode': 200,
         'body': json.dumps('Hello World')
     }
+
+msg = "Hello World"
+print(msg)
