@@ -7,8 +7,15 @@ CAPABILITIES=CAPABILITY_NAMED_IAM
 URL="s3://$(BUCKET)/$(TEMPLATE)"
 
 
+environment:
+	brew install awscli
+	brew install awscurl
+	alias python=python3
+	alias pip=pip3
+	pip install boto3
 
-create_bucket:	
+
+create_bucket:	environment
 	aws s3 mb s3://$(BUCKET) --region $(REGION) || true
 
 package: create_bucket
