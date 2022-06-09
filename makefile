@@ -17,7 +17,7 @@ environment:
 	pip3 install jinja2
 
 
-create_bucket:	environment
+create_bucket:	
 	aws s3 mb s3://$(BUCKET) --region $(REGION) || true
 
 check_bucket:
@@ -46,7 +46,7 @@ test:
 
 
 
-all: deploy_stack
+all: environment deploy_stack 
 
 get_stacks:  
 	aws cloudformation describe-stacks --stack-name $(STACK)
