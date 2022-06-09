@@ -50,7 +50,7 @@ Parameters:
   AvailabilityZone:
     Description: An Availability Zone.
     Type: String
-    Default: eu-central-1c
+    Default: eu-central-1a
     ConstraintDescription: Must be a valid Availability Zone
   BucketName:
     Type: String
