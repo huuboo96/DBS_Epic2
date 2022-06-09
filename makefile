@@ -37,7 +37,7 @@ deploy_stack: presign
 
 	aws cloudformation create-stack \
 		--stack-name $(STACK) \
-		--template-url "https://hkozu-s3-bucket.s3.eu-central-1.amazonaws.com/cloudformation_template.yaml?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAZDR6NLHIC6QHYPGS%2F20220609%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20220609T170721Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=d5973bbc1a15e0c4923fce0a3e6beb9f6566760c79ebe98c8a64a65d6bcd4f26"\
+		--template-url $(URL_NEW) 
 		--capabilities $(CAPABILITIES)
 
 
