@@ -44,8 +44,6 @@ deploy_stack: presign
 test: 
 	echo $(TEST)
 
-
-
 all: environment deploy_stack 
 
 get_stacks:  
