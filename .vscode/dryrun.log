@@ -1,0 +1,9 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory `/Users/hkozu/Documents/GitHub/DBS_Epic2'
+brew install python@3.9
+brew install awscli
+brew install awscurl
+pip3 install boto3
+pip3 install jinja2
+make: Leaving directory `/Users/hkozu/Documents/GitHub/DBS_Epic2'
+ 

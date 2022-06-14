@@ -1,0 +1,122 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+    AWS Cloud Formation Lambda Template: Resources:
+    - AWS EC2 Instance with Amazon Linux AMI, 
+    - AWS Security Group, 
+    - Amazon S3 Bucket,
+    - Lambda Function with Python Code 
+    GitHub Repository:
+    https://github.com/huuboo96/DBS_Epic2/tree/DBS_Epic2_Task1
+
+Parameters:
+
+  TagKey:
+    Description: The EC2 tag key that identifies this as a target for deployments.
+    Type: String
+    Default: Name
+    AllowedPattern: "[\\x20-\\x7E]*"
+    ConstraintDescription: Can contain only ASCII characters.
+
+  TagValue:
+    Description: The EC2 tag value that identifies this as a target for deployments.
+    Type: String
+    Default: EC2Instance
+    AllowedPattern: "[\\x20-\\x7E]*"
+    ConstraintDescription: Can contain only ASCII characters.
+
+  AvailabilityZone:
+    Type: String
+    Description: Availability Zone into which instance will launch
+    Default: {{ availability_zone|default("eu-central-1a", true) }}
+    ConstraintDescription: Must be a valid Availability Zone
+
+  InstanceType:
+    Type: String
+    Description: Choosing  t2 micro because it is free
+    Default: {{ instance_type|default("t2.micro", true) }}
+
+  ImageId:
+    Type: String
+    Description: 'Linux 2 AMI for eu-central-1 Region'
+    Default: {{ ami_id|default("ami-05f5f4f906feab6a7", true) }}
+
+  Region:
+    Description: An Availability Zone.
+    Type: String
+    Default: eu-central-1
+    ConstraintDescription: Must be a valid Availability Zone
+
+  DemoBucketName:
+    Type: String
+    Description: Name of demo bucket
+    Default: {{ bucket_name|default("mleszczynsk-demobucket", true) }}
+
+  KeyName:
+    Description: SSH Keypair to login to the instance
+    Type: String #AWS::EC2::KeyPair::KeyName
+    Default: {{ ssh_key_name|default("aws-rsa", true) }}
+
+  KeyPairName:
+    Description: Name of an existing Amazon EC2 key pair to enable SSH or RDP access
+      to the instances.
+    Type: String
+    Default: Azkaban
+    MinLength: '1'
+    MaxLength: '255'
+    AllowedPattern: "[\\x20-\\x7E]*"
+    ConstraintDescription: KeyPairName is a required Field and can contain only ASCII
+      characters.
+
+
+  SSHLocation:
+    Description: " The IP address range that can be used to SSH to the EC2 instances"
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 0.0.0.0/0
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+
+
+
+
+
+
+
+Resources:
+
+
+-VPC
+-Subnet
+
+
+  DemoInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties: 
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      AvailabilityZone: !Ref AvailabilityZone
+      KeyName: !Ref KeyName
+      #SecurityGroupIds: 
+      #  - !Ref DemoSecurityGroup
+      IamInstanceProfile: !Ref DemoInstanceProfile
+      NetworkInterfaces: 
+      - AssociatePublicIpAddress: "true"
+        DeviceIndex: "0"
+        GroupSet: 
+          - !GetAtt DemoSecurityGroup.GroupId
+        SubnetId: !Ref: "DemoSubnet"
+
+  DemoSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: SG to allow SSH access via port 22
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+      Tags:
+        - Key: Name
+          Value: SSH-SG
